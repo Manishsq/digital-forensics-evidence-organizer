@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Chain of Custody – DFEO{% endblock %}
+{% block breadcrumb %}<i class="bi bi-link-45deg me-1"></i> Chain of Custody{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">
+    Chain of Custody
+    {% if evidence %}<span class="text-muted fs-6 ms-2">— {{ evidence.evidence_id }}</span>{% endif %}
+    {% if case %}<span class="text-muted fs-6 ms-2">— Case {{ case.case_id }}</span>{% endif %}
+  </h4>
+  {% if evidence %}
+  <form method="post" action="/custody/verify/{{ evidence.id }}">
+    <button class="btn btn-warning btn-sm fw-semibold text-dark">
+      <i class="bi bi-shield-check me-1"></i>Verify Chain
+    </button>
+  </form>
+  {% endif %}
+</div>
+
+{% if chain_result %}
+<div class="alert {{ 'alert-success' if chain_result.valid else 'alert-danger' }} d-flex align-items-center gap-3 mb-3">
+  <i class="bi {{ 'bi-shield-fill-check fs-3' if chain_result.valid else 'bi-shield-fill-x fs-3' }}"></i>
+  <div>
+    <strong>{{ 'CHAIN VERIFIED' if chain_result.valid else 'CHAIN INTEGRITY FAILURE' }}</strong>
+    <div class="small">{{ chain_result.message }}</div>
+    {% if not chain_result.valid and chain_result.failed_event_id %}
+    <div class="small text-danger fw-semibold">Failed event ID: {{ chain_result.failed_event_id }}</div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Filter bar -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <form method="get" action="/custody" class="row g-2 align-items-end">
+      <div class="col-md-5">
+        <input type="text" class="form-control form-control-sm" name="evidence_id"
+               value="{{ filter_evidence_id }}" placeholder="Filter by Evidence internal ID…">
+      </div>
+      <div class="col-md-5">
+        <input type="text" class="form-control form-control-sm" name="case_id"
+               value="{{ filter_case_id }}" placeholder="Filter by Case internal ID…">
+      </div>
+      <div class="col-md-2 d-flex gap-1">
+        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-search"></i></button>
+        <a href="/custody" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0" style="font-size:.82rem">
+        <thead class="table-dark">
+          <tr>
+            <th>Timestamp (UTC)</th>
+            <th>Action</th>
+            <th>User</th>
+            <th>Description</th>
+            <th>Event Hash</th>
+            <th>Prev Hash</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ev in events %}
+          <tr>
+            <td class="text-nowrap text-muted">{{ ev.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>
+              <span class="badge
+                {% if 'FAIL' in ev.action.value %}bg-danger
+                {% elif 'VERIFIED' in ev.action.value or 'IMPORTED' in ev.action.value %}bg-success
+                {% elif 'DOWNLOAD' in ev.action.value %}bg-info text-dark
+                {% else %}bg-secondary{% endif %}">
+                {{ ev.action.value }}
+              </span>
+            </td>
+            <td class="text-muted">{{ ev.user_id[:8] }}…</td>
+            <td>{{ ev.description[:100] }}{% if ev.description|length > 100 %}…{% endif %}</td>
+            <td class="fw-mono text-muted" style="font-size:.72rem" title="{{ ev.event_hash }}">{{ ev.event_hash[:16] }}…</td>
+            <td class="fw-mono text-muted" style="font-size:.72rem" title="{{ ev.previous_hash }}">
+              {% if ev.previous_hash == 'GENESIS' %}
+              <span class="badge bg-primary">GENESIS</span>
+              {% else %}{{ ev.previous_hash[:12] }}…{% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-muted py-4">No custody events found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer text-muted small">{{ events|length }} event(s)</div>
+</div>
+
+<div class="alert alert-secondary mt-3 py-2 small">
+  <i class="bi bi-info-circle me-1"></i>
+  The chain-of-custody is <strong>append-only</strong>. Each event hash is computed as
+  SHA-256(previous_hash + event fields + timestamp). Use "Verify Chain" to detect tampering.
+</div>
+{% endblock %}

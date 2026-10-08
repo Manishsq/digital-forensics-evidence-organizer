@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}{{ evidence.evidence_id }} – DFEO{% endblock %}
+{% block breadcrumb %}<a href="/evidence">Evidence</a> / {{ evidence.evidence_id }}{% endblock %}
+{% block content %}
+
+{% if verification_result %}
+<div class="alert {{ 'alert-success' if verification_result.valid else 'alert-danger' }} d-flex align-items-center gap-2 mb-3">
+  <i class="bi {{ 'bi-shield-check fs-4' if verification_result.valid else 'bi-shield-x fs-4' }}"></i>
+  <div>
+    <strong>{{ verification_result.message }}</strong>
+    {% if not verification_result.valid %}
+    <div class="small mt-1">
+      SHA-256 {{ 'matched' if verification_result.sha256_match else 'DID NOT MATCH' }}
+      {% if verification_result.calculated %}
+      <br>Calculated: <code>{{ verification_result.calculated.get('sha256','—') }}</code>
+      <br>Stored: <code>{{ verification_result.stored.get('sha256','—') }}</code>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="small mt-1">
+      SHA-256, SHA-512 and MD5 all match. Evidence integrity confirmed.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h4 class="mb-0">{{ evidence.original_filename }}</h4>
+    <div class="text-muted small">{{ evidence.evidence_id }} · {{ evidence.evidence_category.value }}</div>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <form method="post" action="/evidence/{{ evidence.id }}/verify" class="d-inline">
+      <button class="btn btn-sm btn-warning text-dark fw-semibold">
+        <i class="bi bi-shield-check me-1"></i>Verify Integrity
+      </button>
+    </form>
+    <a href="/evidence/{{ evidence.id }}/download" class="btn btn-sm btn-outline-success">
+      <i class="bi bi-download me-1"></i>Download Copy
+    </a>
+    <a href="/custody?evidence_id={{ evidence.id }}" class="btn btn-sm btn-outline-info">
+      <i class="bi bi-link-45deg me-1"></i>Chain of Custody
+    </a>
+    <form method="post" action="/reports/generate/evidence/{{ evidence.id }}" class="d-inline">
+      <button class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-file-earmark-text me-1"></i>Export Report
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Integrity Status Banner -->
+<div class="alert
+  {% if evidence.verification_status.value == 'VERIFIED' %}alert-success
+  {% elif evidence.verification_status.value == 'FAILED' %}alert-danger
+  {% else %}alert-warning{% endif %} py-2 mb-3 d-flex align-items-center gap-2">
+  <i class="bi
+    {% if evidence.verification_status.value == 'VERIFIED' %}bi-shield-fill-check
+    {% elif evidence.verification_status.value == 'FAILED' %}bi-shield-fill-x
+    {% else %}bi-shield-exclamation{% endif %} fs-5"></i>
+  <div>
+    <strong>Evidence Integrity: {{ evidence.verification_status.value }}</strong>
+    {% if evidence.last_verified_at %}
+    <div class="small">Last verified: {{ evidence.last_verified_at.strftime('%Y-%m-%d %H:%M UTC') }}</div>
+    {% else %}
+    <div class="small">Not yet verified. Click "Verify Integrity" to check.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Main metadata -->
+  <div class="col-lg-7">
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-info-circle me-1"></i>Evidence Metadata</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <tbody>
+            <tr><th class="ps-3" style="width:180px">Evidence ID</th><td class="fw-mono text-primary">{{ evidence.evidence_id }}</td></tr>
+            <tr><th class="ps-3">Case</th><td>{% if evidence.case %}<a href="/cases/{{ evidence.case.id }}">{{ evidence.case.case_id }}</a>{% else %}—{% endif %}</td></tr>
+            <tr><th class="ps-3">Original Filename</th><td>{{ evidence.original_filename }}</td></tr>
+            <tr><th class="ps-3">Stored Filename</th><td class="text-muted small">{{ evidence.stored_filename }}</td></tr>
+            <tr><th class="ps-3">File Size</th><td>{{ fmt_size(evidence.file_size) }}</td></tr>
+            <tr><th class="ps-3">MIME Type</th><td>{{ evidence.mime_type or '—' }}</td></tr>
+            <tr><th class="ps-3">Category</th><td>{{ evidence.evidence_category.value }}</td></tr>
+            <tr><th class="ps-3">Evidence Type</th><td>{{ evidence.evidence_type or '—' }}</td></tr>
+            <tr><th class="ps-3">Source</th><td>{{ evidence.source or '—' }}</td></tr>
+            <tr><th class="ps-3">Device</th><td>{{ evidence.device or '—' }}</td></tr>
+            <tr><th class="ps-3">Suspect Ref</th><td>{{ evidence.suspect_reference or '—' }}</td></tr>
+            <tr><th class="ps-3">Acquisition</th><td>{{ evidence.acquisition_method or '—' }}</td></tr>
+            <tr><th class="ps-3">Description</th><td>{{ evidence.description or '—' }}</td></tr>
+            <tr><th class="ps-3">Tags</th><td>{% for t in tags %}<span class="badge bg-secondary me-1">{{ t }}</span>{% else %}—{% endfor %}</td></tr>
+            <tr><th class="ps-3">Imported At</th><td>{{ evidence.imported_timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}</td></tr>
+            <tr><th class="ps-3">Imported By</th><td>{{ evidence.creator.full_name if evidence.creator else evidence.created_by }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Extended metadata -->
+    {% if evidence.metadata_entries %}
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-tags me-1"></i>Extended Metadata</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <tbody>
+            {% for m in evidence.metadata_entries %}
+            <tr><th class="ps-3 text-muted" style="width:180px">{{ m.key }}</th><td>{{ m.value }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Hash panel -->
+  <div class="col-lg-5">
+    <div class="card mb-3 border-primary">
+      <div class="card-header bg-primary bg-opacity-25 fw-semibold">
+        <i class="bi bi-fingerprint me-1"></i>Cryptographic Hashes
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small text-muted fw-semibold">SHA-256</span>
+            <button class="btn btn-xs btn-sm btn-outline-secondary py-0 copy-btn"
+                    data-value="{{ evidence.sha256 or '' }}"><i class="bi bi-clipboard"></i></button>
+          </div>
+          <div class="dfeo-hash">{{ evidence.sha256 or '—' }}</div>
+        </div>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small text-muted fw-semibold">SHA-512</span>
+            <button class="btn btn-xs btn-sm btn-outline-secondary py-0 copy-btn"
+                    data-value="{{ evidence.sha512 or '' }}"><i class="bi bi-clipboard"></i></button>
+          </div>
+          <div class="dfeo-hash">{{ evidence.sha512 or '—' }}</div>
+        </div>
+        <div class="mb-2">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small text-muted fw-semibold">MD5 <span class="text-warning">(legacy)</span></span>
+            <button class="btn btn-xs btn-sm btn-outline-secondary py-0 copy-btn"
+                    data-value="{{ evidence.md5 or '' }}"><i class="bi bi-clipboard"></i></button>
+          </div>
+          <div class="dfeo-hash">{{ evidence.md5 or '—' }}</div>
+        </div>
+        <div class="alert alert-secondary py-2 mt-3 small mb-0">
+          <i class="bi bi-lock me-1"></i>These hashes were calculated at time of import and are NEVER overwritten.
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Custody -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-link-45deg me-1"></i>Recent Custody Events</span>
+        <a href="/custody?evidence_id={{ evidence.id }}" class="btn btn-sm btn-outline-secondary btn-xs">Full Chain</a>
+      </div>
+      <div class="card-body p-0">
+        {% if custody_events %}
+        <div class="table-responsive">
+          <table class="table table-sm mb-0" style="font-size:.78rem">
+            <thead class="table-dark"><tr><th>Time</th><th>Action</th></tr></thead>
+            <tbody>
+              {% for ce in custody_events[:8] %}
+              <tr>
+                <td class="text-muted">{{ ce.timestamp.strftime('%m-%d %H:%M') }}</td>
+                <td><span class="badge bg-secondary">{{ ce.action.value }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-muted small py-3 text-center">No events.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

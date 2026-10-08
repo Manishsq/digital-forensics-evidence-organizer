@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Audit Log – DFEO{% endblock %}
+{% block breadcrumb %}<i class="bi bi-journal-text me-1"></i> Audit Log{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Audit Log</h4>
+  <span class="text-muted small">{{ logs|length }} record(s) shown</span>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <form method="get" action="/audit" class="row g-2 align-items-end">
+      <div class="col-md-2">
+        <select class="form-select form-select-sm" name="user_filter">
+          <option value="">All Users</option>
+          {% for u in all_users %}
+          <option value="{{ u.id }}" {% if filter_user == u.id %}selected{% endif %}>{{ u.username }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select class="form-select form-select-sm" name="action_filter">
+          <option value="">All Actions</option>
+          {% for a in actions %}
+          <option value="{{ a }}" {% if filter_action == a %}selected{% endif %}>{{ a }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <input type="text" class="form-control form-control-sm" name="entity_type"
+               value="{{ filter_entity_type }}" placeholder="Entity type (case, evidence…)">
+      </div>
+      <div class="col-md-2">
+        <input type="date" class="form-control form-control-sm" name="date_from" value="{{ filter_date_from }}">
+      </div>
+      <div class="col-md-2">
+        <input type="date" class="form-control form-control-sm" name="date_to" value="{{ filter_date_to }}">
+      </div>
+      <div class="col-md-2 d-flex gap-1">
+        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-search"></i> Filter</button>
+        <a href="/audit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0" style="font-size:.82rem">
+        <thead class="table-dark">
+          <tr>
+            <th>Timestamp (UTC)</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Entity</th>
+            <th>Description</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td class="text-nowrap text-muted">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td class="small">{% if log.user %}{{ log.user.username }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td>
+              <span class="badge
+                {% if 'FAIL' in log.action.value or 'DELETE' in log.action.value %}bg-danger
+                {% elif 'LOGIN' == log.action.value %}bg-success
+                {% elif 'LOGOUT' == log.action.value %}bg-secondary
+                {% elif 'IMPORT' in log.action.value %}bg-info text-dark
+                {% elif 'VERIFY' in log.action.value or 'VERIF' in log.action.value %}bg-warning text-dark
+                {% else %}bg-secondary{% endif %}" style="font-size:.72rem">
+                {{ log.action.value }}
+              </span>
+            </td>
+            <td class="small text-muted">
+              {{ log.entity_type or '—' }}
+              {% if log.entity_id %}<br><span class="fw-mono" style="font-size:.7rem">{{ log.entity_id[:12] }}…</span>{% endif %}
+            </td>
+            <td>{{ (log.description or '—')[:100] }}</td>
+            <td class="text-muted small">{{ log.source_ip or '—' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-muted py-4">No audit records found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

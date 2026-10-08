@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – DFEO{% endblock %}
+{% block breadcrumb %}<i class="bi bi-speedometer2 me-1"></i> Dashboard{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card dfeo-stat-card border-primary">
+      <div class="card-body">
+        <div class="text-muted small mb-1"><i class="bi bi-folder2-open me-1"></i>Total Cases</div>
+        <div class="fs-2 fw-bold text-primary">{{ stats.total_cases }}</div>
+        <div class="small mt-1">
+          <span class="text-success">{{ stats.open_cases }} Open</span>
+          · <span class="text-secondary">{{ stats.closed_cases }} Closed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card dfeo-stat-card border-info">
+      <div class="card-body">
+        <div class="text-muted small mb-1"><i class="bi bi-file-earmark-lock2 me-1"></i>Evidence Items</div>
+        <div class="fs-2 fw-bold text-info">{{ stats.total_evidence }}</div>
+        <div class="small mt-1">
+          <span class="text-success">{{ stats.verified_evidence }} Verified</span>
+          · <span class="text-warning">{{ stats.pending_verification }} Pending</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card dfeo-stat-card border-success">
+      <div class="card-body">
+        <div class="text-muted small mb-1"><i class="bi bi-hdd me-1"></i>Storage Used</div>
+        <div class="fs-2 fw-bold text-success">{{ stats.storage_used }}</div>
+        <div class="small mt-1 text-muted">Evidence repository</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card dfeo-stat-card border-warning">
+      <div class="card-body">
+        <div class="text-muted small mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Needs Verification</div>
+        <div class="fs-2 fw-bold text-warning">{{ stats.pending_verification }}</div>
+        <div class="small mt-1 text-muted">Evidence items</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Recent Evidence -->
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-1"></i>Recent Evidence Imports</span>
+        <a href="/evidence/import" class="btn btn-sm btn-primary"><i class="bi bi-plus"></i> Import</a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_evidence %}
+        <ul class="list-group list-group-flush">
+          {% for ev in recent_evidence %}
+          <li class="list-group-item list-group-item-action">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <a href="/evidence/{{ ev.id }}" class="fw-semibold text-decoration-none">{{ ev.original_filename | truncate(35) }}</a>
+                <div class="text-muted" style="font-size:.75rem">{{ ev.evidence_id }} · {{ ev.evidence_category.value }}</div>
+              </div>
+              <span class="badge
+                {% if ev.verification_status.value == 'VERIFIED' %}bg-success
+                {% elif ev.verification_status.value == 'FAILED' %}bg-danger
+                {% else %}bg-warning text-dark{% endif %}" style="font-size:.7rem">
+                {{ ev.verification_status.value }}
+              </span>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center text-muted py-4 small">No evidence imported yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Custody Events -->
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-link-45deg me-1"></i>Recent Chain-of-Custody Events</span>
+        <a href="/custody" class="btn btn-sm btn-outline-secondary">View All</a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_custody %}
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0" style="font-size:.82rem">
+            <thead class="table-dark">
+              <tr><th>Time (UTC)</th><th>Action</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              {% for ev in recent_custody %}
+              <tr>
+                <td class="text-muted text-nowrap">{{ ev.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td><span class="badge bg-secondary text-truncate" style="max-width:140px">{{ ev.action.value }}</span></td>
+                <td class="text-truncate" style="max-width:280px">{{ ev.description }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4 small">No custody events yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-3 mt-1">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-lightning-charge me-1"></i>Quick Actions</div>
+      <div class="card-body d-flex flex-wrap gap-2">
+        <a href="/cases/new" class="btn btn-outline-primary btn-sm"><i class="bi bi-folder-plus me-1"></i>New Case</a>
+        <a href="/evidence/import" class="btn btn-outline-info btn-sm"><i class="bi bi-cloud-upload me-1"></i>Import Evidence</a>
+        <a href="/evidence" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search me-1"></i>Search Evidence</a>
+        <a href="/custody" class="btn btn-outline-secondary btn-sm"><i class="bi bi-link-45deg me-1"></i>Custody Log</a>
+        <a href="/audit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-journal-text me-1"></i>Audit Log</a>
+        <a href="/reports" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-text me-1"></i>Reports</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Import Tool Output – DFEO{% endblock %}
+{% block breadcrumb %}<a href="/evidence">Evidence</a> / Import Tool Output{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-filetype-json me-1"></i>Import Forensic Tool Output</div>
+      <div class="card-body">
+        <div class="alert alert-info py-2 small mb-3">
+          <i class="bi bi-info-circle me-1"></i>
+          Supports JSON, CSV and plain-text formats from forensic tools.
+          Metadata is parsed and associated with the selected case.
+          Imported content is NEVER executed.
+        </div>
+        {% if error %}<div class="alert alert-danger py-2">{{ error }}</div>{% endif %}
+        {% if result %}
+        <div class="alert alert-success py-2">
+          <i class="bi bi-check-circle me-1"></i>
+          Successfully imported <strong>{{ result.count }}</strong> record(s).
+          {% for eid in result.ids %}<span class="badge bg-secondary ms-1">{{ eid }}</span>{% endfor %}
+        </div>
+        {% endif %}
+        <form method="post" action="/evidence/import-tool-output" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label">Case <span class="text-danger">*</span></label>
+            <select class="form-select" name="case_id" required>
+              <option value="">— Select Case —</option>
+              {% for c in cases %}
+              <option value="{{ c.id }}">{{ c.case_id }} — {{ c.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Tool Output File <span class="text-danger">*</span></label>
+            <input type="file" class="form-control" name="tool_file"
+                   accept=".json,.csv,.txt,.log,.text" required>
+            <div class="form-text">Supported: JSON, CSV, TXT/LOG. File is parsed for metadata only — never executed.</div>
+          </div>
+          <div class="mt-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Import Tool Output</button>
+            <a href="/evidence" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Format Examples -->
+    <div class="card mt-3">
+      <div class="card-header small"><i class="bi bi-code me-1"></i>Supported Format Examples</div>
+      <div class="card-body">
+        <ul class="nav nav-tabs mb-3" id="formatTabs">
+          <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#json-ex">JSON</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#csv-ex">CSV</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#txt-ex">TXT/LOG</a></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="json-ex">
+<pre class="bg-dark text-light p-3 rounded" style="font-size:.78rem">{
+  "filename": "disk_image.dd",
+  "sha256": "e3b0c44298fc1c...",
+  "md5": "d41d8cd98f00b20...",
+  "size": 1073741824,
+  "timestamp": "2026-01-15T10:30:00Z",
+  "source": "Suspect laptop"
+}</pre>
+          </div>
+          <div class="tab-pane fade" id="csv-ex">
+<pre class="bg-dark text-light p-3 rounded" style="font-size:.78rem">filename,sha256,md5,size,timestamp
+disk.dd,e3b0c44298fc1c...,d41d8cd98...,1073741824,2026-01-15
+memory.dmp,6b86b273ff34fc...,1d996e033...,8589934592,2026-01-15</pre>
+          </div>
+          <div class="tab-pane fade" id="txt-ex">
+<pre class="bg-dark text-light p-3 rounded" style="font-size:.78rem">filename: disk_image.dd
+sha256: e3b0c44298fc1c...
+md5: d41d8cd98f00b20...
+size: 1073741824
+timestamp: 2026-01-15T10:30:00Z</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

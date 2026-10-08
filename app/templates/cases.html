@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Cases – DFEO{% endblock %}
+{% block breadcrumb %}<i class="bi bi-folder2-open me-1"></i> Cases{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Forensic Cases</h4>
+  <a href="/cases/new" class="btn btn-primary btn-sm"><i class="bi bi-folder-plus me-1"></i>New Case</a>
+</div>
+
+{% if request.query_params.get('error') == 'permission' %}
+<div class="alert alert-danger py-2">You do not have permission to perform this action.</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover table-sm mb-0" id="casesTable">
+        <thead class="table-dark">
+          <tr>
+            <th>Case ID</th><th>Name</th><th>Investigator</th>
+            <th>Status</th><th>Evidence</th><th>Created</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for case in cases %}
+          <tr>
+            <td class="fw-mono text-primary">{{ case.case_id }}</td>
+            <td>{{ case.name }}</td>
+            <td class="text-muted small">{{ case.investigator_user.full_name if case.investigator_user else '—' }}</td>
+            <td>
+              <span class="badge
+                {% if case.status.value == 'OPEN' %}bg-success
+                {% elif case.status.value == 'IN_REVIEW' %}bg-warning text-dark
+                {% elif case.status.value == 'CLOSED' %}bg-secondary
+                {% else %}bg-dark border{% endif %}">
+                {{ case.status.value }}
+              </span>
+            </td>
+            <td>{{ evidence_counts.get(case.id, 0) }}</td>
+            <td class="text-muted small">{{ case.created_at.strftime('%Y-%m-%d') }}</td>
+            <td><a href="/cases/{{ case.id }}" class="btn btn-xs btn-outline-info btn-sm">View</a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center text-muted py-4">No cases found. <a href="/cases/new">Create a case</a>.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

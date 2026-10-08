@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Users – DFEO{% endblock %}
+{% block breadcrumb %}<i class="bi bi-people me-1"></i> User Management{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">User Management</h4>
+  <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
+    <i class="bi bi-person-plus me-1"></i>Create User
+  </button>
+</div>
+{% if request.query_params.get('error') == 'duplicate' %}
+<div class="alert alert-danger py-2">Username or email already exists.</div>
+{% endif %}
+{% if request.query_params.get('success') == 'created' %}
+<div class="alert alert-success py-2">User created successfully.</div>
+{% endif %}
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-sm table-hover mb-0">
+      <thead class="table-dark"><tr><th>Username</th><th>Full Name</th><th>Email</th><th>Role</th><th>Org</th><th>Created</th><th>Active</th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="fw-semibold">{{ u.username }}</td>
+          <td>{{ u.full_name }}</td>
+          <td class="small text-muted">{{ u.email }}</td>
+          <td>
+            <span class="badge
+              {% if u.role.value == 'ADMIN' %}bg-danger
+              {% elif u.role.value == 'INVESTIGATOR' %}bg-primary
+              {% else %}bg-secondary{% endif %}">
+              {{ u.role.value }}
+            </span>
+          </td>
+          <td class="small text-muted">{{ u.organization or '—' }}</td>
+          <td class="small text-muted">{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+          <td><span class="badge {{ 'bg-success' if u.is_active else 'bg-secondary' }}">{{ 'Active' if u.is_active else 'Inactive' }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create User Modal -->
+<div class="modal fade" id="createUserModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Create New User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <form method="post" action="/admin/users/create">
+          <div class="mb-2">
+            <label class="form-label small">Username</label>
+            <input type="text" class="form-control form-control-sm" name="username" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Full Name</label>
+            <input type="text" class="form-control form-control-sm" name="full_name" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Email</label>
+            <input type="email" class="form-control form-control-sm" name="email" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Password</label>
+            <input type="password" class="form-control form-control-sm" name="password" required minlength="8">
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Role</label>
+            <select class="form-select form-select-sm" name="role">
+              <option value="INVESTIGATOR">INVESTIGATOR</option>
+              <option value="REVIEWER">REVIEWER</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Organization</label>
+            <input type="text" class="form-control form-control-sm" name="organization">
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm w-100 mt-2">Create User</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

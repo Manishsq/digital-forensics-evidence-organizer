@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ report.report_id }} – DFEO{% endblock %}
+{% block breadcrumb %}<a href="/reports">Reports</a> / {{ report.report_id }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h4 class="mb-0">{{ report.title }}</h4>
+    <div class="text-muted small">{{ report.report_id }} · Generated {{ report.generated_at.strftime('%Y-%m-%d %H:%M UTC') }}</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/reports/{{ report.id }}/download" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-download me-1"></i>Download HTML
+    </a>
+    <button onclick="window.print()" class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-printer me-1"></i>Print
+    </button>
+  </div>
+</div>
+<div class="alert alert-warning py-2 small">
+  <i class="bi bi-exclamation-triangle me-1"></i>
+  This is a GENERATED REPORT — it is a derived document and NOT original forensic evidence.
+</div>
+<div class="card">
+  <div class="card-body p-0">
+    <iframe
+      srcdoc="{{ html_content | e }}"
+      style="width:100%;min-height:800px;border:none;"
+      title="Forensic Report"
+      sandbox="allow-same-origin">
+    </iframe>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,3 @@
+# This directory stores forensic evidence files.
+# Files are NEVER executed. Only read for hashing and download.
+# Original evidence is NEVER modified.

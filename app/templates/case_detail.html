@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}{{ case.case_id }} – DFEO{% endblock %}
+{% block breadcrumb %}<a href="/cases">Cases</a> / {{ case.case_id }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h4 class="mb-0">{{ case.case_id }} — {{ case.name }}</h4>
+    <div class="text-muted small mt-1">
+      <i class="bi bi-person me-1"></i>{{ case.investigator_user.full_name if case.investigator_user else '—' }}
+      &nbsp;·&nbsp;
+      <i class="bi bi-calendar me-1"></i>{{ case.created_at.strftime('%Y-%m-%d %H:%M UTC') }}
+      {% if case.organization %}&nbsp;·&nbsp;<i class="bi bi-building me-1"></i>{{ case.organization }}{% endif %}
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <form method="post" action="/reports/generate/case/{{ case.id }}">
+      <button class="btn btn-sm btn-outline-info"><i class="bi bi-file-earmark-text me-1"></i>Generate Report</button>
+    </form>
+    <a href="/evidence/import?case={{ case.id }}" class="btn btn-sm btn-primary"><i class="bi bi-cloud-upload me-1"></i>Import Evidence</a>
+  </div>
+</div>
+
+{% if request.query_params.get('imported') %}
+<div class="alert alert-success py-2">
+  <i class="bi bi-check-circle me-1"></i>Successfully imported {{ request.query_params.get('imported') }} evidence file(s).
+</div>
+{% endif %}
+
+<!-- Case status + details -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header">Case Information</div>
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-md-3 text-muted small">Status</div>
+          <div class="col-md-9">
+            <span class="badge
+              {% if case.status.value == 'OPEN' %}bg-success
+              {% elif case.status.value == 'IN_REVIEW' %}bg-warning text-dark
+              {% elif case.status.value == 'CLOSED' %}bg-secondary
+              {% else %}bg-dark border{% endif %} me-2">{{ case.status.value }}</span>
+          </div>
+          <div class="col-md-3 text-muted small">Description</div>
+          <div class="col-md-9 small">{{ case.description or '—' }}</div>
+          <div class="col-md-3 text-muted small">Notes</div>
+          <div class="col-md-9 small">{{ case.notes or '—' }}</div>
+          <div class="col-md-3 text-muted small">Last Updated</div>
+          <div class="col-md-9 small">{{ case.updated_at.strftime('%Y-%m-%d %H:%M UTC') }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header">Update Case</div>
+      <div class="card-body">
+        {% if current_user.role.value != 'REVIEWER' %}
+        <form method="post" action="/cases/{{ case.id }}/update">
+          <div class="mb-2">
+            <label class="form-label small">Status</label>
+            <select class="form-select form-select-sm" name="status">
+              {% for s in statuses %}
+              <option value="{{ s }}" {% if case.status.value == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Name</label>
+            <input type="text" class="form-control form-control-sm" name="name" value="{{ case.name }}">
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Notes</label>
+            <textarea class="form-control form-control-sm" name="notes" rows="2">{{ case.notes or '' }}</textarea>
+          </div>
+          <input type="hidden" name="description" value="{{ case.description or '' }}">
+          <button type="submit" class="btn btn-sm btn-outline-primary w-100">Update</button>
+        </form>
+        {% else %}
+        <p class="text-muted small">Read-only access.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<ul class="nav nav-tabs mb-3" id="caseTabs">
+  <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#evidence-tab">
+    <i class="bi bi-file-earmark-lock2 me-1"></i>Evidence ({{ evidence_items|length }})</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#custody-tab">
+    <i class="bi bi-link-45deg me-1"></i>Custody Events</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reports-tab">
+    <i class="bi bi-file-earmark-text me-1"></i>Reports ({{ reports|length }})</a></li>
+</ul>
+<div class="tab-content">
+  <!-- Evidence Tab -->
+  <div class="tab-pane fade show active" id="evidence-tab">
+    {% if evidence_items %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover">
+        <thead class="table-dark">
+          <tr><th>Evidence ID</th><th>Filename</th><th>Category</th><th>Size</th><th>Imported</th><th>Integrity</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for ev in evidence_items %}
+          <tr>
+            <td class="fw-mono text-primary small">{{ ev.evidence_id }}</td>
+            <td class="small">{{ ev.original_filename | truncate(40) }}</td>
+            <td class="small">{{ ev.evidence_category.value }}</td>
+            <td class="small text-muted">{{ ev.file_size }}</td>
+            <td class="small text-muted">{{ ev.imported_timestamp.strftime('%Y-%m-%d') }}</td>
+            <td>
+              <span class="badge
+                {% if ev.verification_status.value == 'VERIFIED' %}bg-success
+                {% elif ev.verification_status.value == 'FAILED' %}bg-danger
+                {% else %}bg-warning text-dark{% endif %}" style="font-size:.7rem">
+                {{ ev.verification_status.value }}
+              </span>
+            </td>
+            <td><a href="/evidence/{{ ev.id }}" class="btn btn-xs btn-sm btn-outline-info">View</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">
+      No evidence imported yet.
+      <a href="/evidence/import">Import evidence</a>
+    </div>
+    {% endif %}
+  </div>
+  <!-- Custody Tab -->
+  <div class="tab-pane fade" id="custody-tab">
+    {% if custody_events %}
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead class="table-dark">
+          <tr><th>Timestamp</th><th>Action</th><th>User</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          {% for ev in custody_events %}
+          <tr>
+            <td class="small text-muted">{{ ev.timestamp.strftime('%Y-%m-%d %H:%M UTC') }}</td>
+            <td><span class="badge bg-secondary small">{{ ev.action.value }}</span></td>
+            <td class="small">{{ ev.user_id[:8] }}…</td>
+            <td class="small">{{ ev.description[:120] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4 small">No custody events for this case yet.</div>
+    {% endif %}
+    <a href="/custody?case_id={{ case.id }}" class="btn btn-sm btn-outline-secondary">View Full Chain</a>
+  </div>
+  <!-- Reports Tab -->
+  <div class="tab-pane fade" id="reports-tab">
+    {% if reports %}
+    <ul class="list-group list-group-flush">
+      {% for r in reports %}
+      <li class="list-group-item list-group-item-action">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <a href="/reports/{{ r.id }}" class="text-decoration-none fw-semibold">{{ r.title }}</a>
+            <div class="text-muted small">{{ r.report_id }} · {{ r.generated_at.strftime('%Y-%m-%d %H:%M UTC') }}</div>
+          </div>
+          <a href="/reports/{{ r.id }}/download" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i></a>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="text-muted small py-3">No reports generated yet.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

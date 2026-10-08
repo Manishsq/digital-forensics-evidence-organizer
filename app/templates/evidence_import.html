@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Import Evidence – DFEO{% endblock %}
+{% block breadcrumb %}<a href="/evidence">Evidence</a> / Import{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-cloud-upload me-1"></i>Import Evidence Files</div>
+      <div class="card-body">
+        <div class="alert alert-info py-2 small mb-3">
+          <i class="bi bi-info-circle me-1"></i>
+          Files will be copied to the secure evidence repository. Original files are NEVER executed or modified.
+          SHA-256, SHA-512 and MD5 hashes are calculated immediately upon import.
+        </div>
+        {% if error %}<div class="alert alert-danger py-2">{{ error }}</div>{% endif %}
+        <form method="post" action="/evidence/import" enctype="multipart/form-data">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Case <span class="text-danger">*</span></label>
+              <select class="form-select" name="case_id" required>
+                <option value="">— Select Case —</option>
+                {% for c in cases %}
+                <option value="{{ c.id }}">{{ c.case_id }} — {{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Evidence Category</label>
+              <select class="form-select" name="evidence_category">
+                {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Evidence Files <span class="text-danger">*</span></label>
+              <input type="file" class="form-control" name="files" multiple required>
+              <div class="form-text">Multiple files allowed. Max 2 GB each. Files are NEVER executed.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" name="description" rows="2" placeholder="Brief description of this evidence…"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Source / Origin</label>
+              <input type="text" class="form-control" name="source" placeholder="e.g. Suspect laptop seizure">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Device</label>
+              <input type="text" class="form-control" name="device" placeholder="e.g. Dell Inspiron SN:12345">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Suspect / Reference ID</label>
+              <input type="text" class="form-control" name="suspect_reference" placeholder="Case reference ID">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Acquisition Method</label>
+              <input type="text" class="form-control" name="acquisition_method" placeholder="e.g. FTK Imager">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Evidence Type</label>
+              <input type="text" class="form-control" name="evidence_type" placeholder="e.g. raw dd image">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Tags <span class="text-muted small">(comma-separated)</span></label>
+              <input type="text" class="form-control" name="tags_input" placeholder="disk, windows, ntfs">
+            </div>
+          </div>
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Import Evidence</button>
+            <a href="/evidence" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+This is a sample evidence text file for demonstration purposes.
+
+CASE: CASE-2026-001
+SUBJECT: Demo Investigation
+
+TIMELINE OF EVENTS:
+===================
+2026-01-10 08:30 - Subject laptop seized at office premises
+2026-01-10 09:00 - Forensic image acquisition commenced
+2026-01-10 11:45 - Acquisition completed, MD5 verified at source
+2026-01-11 09:00 - Analysis commenced in forensic workstation
+
+KEY FINDINGS:
+=============
+- Multiple deleted files recovered from $RECYCLE.BIN
+- Browser history shows access to encrypted communications platform
+- 3 encrypted archive files found on Desktop
+- Last login timestamp: 2026-01-09 23:47:52 UTC
+
+EVIDENCE ITEMS:
+===============
+1. Laptop hard drive image (disk.dd)
+2. RAM capture (memory.dmp)
+3. Browser history export (chrome_history.csv)
+
+NOTE: This is sample/demo data. No real personal information is contained here.
+All evidence items are fictional and for educational purposes only.

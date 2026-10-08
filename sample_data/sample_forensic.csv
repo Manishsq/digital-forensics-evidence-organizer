@@ -1,0 +1,6 @@
+filename,sha256,md5,size,timestamp,source,description,acquisition_method
+browser_history.db,a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3,900150983cd24fb0d6963f7d28e17f72,524288,2026-01-10T14:00:00Z,Suspect Chrome profile,Chrome browser history SQLite database,Logical extraction
+documents_archive.zip,2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824,5d41402abc4b2a76b9719d911017c592,10485760,2026-01-10T14:15:00Z,Desktop folder,Archive containing suspect documents,Logical extraction
+email_export.pst,982d9e3eb996f559e633f4d194def3761d909f5a3b647d1a851fead67c32c9d1,b14a7b8059d9c055954c92674ce60032,20971520,2026-01-10T14:30:00Z,Outlook profile,Email archive PST file,Logical extraction
+network_capture.pcap,7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069,1679091c5a880faf6fb5e6087eb1b2dc,2097152,2026-01-10T15:00:00Z,Network tap,Network traffic capture during incident window,Network tap
+usb_drive_image.dd,e4da3b7fbbce2345d7772b0674a318d5,5d41402abc4b2a76b9719d911017c592,67108864,2026-01-10T15:30:00Z,USB flash drive SN:XYZ789,16 GB USB drive found at scene,Write-blocked DD image

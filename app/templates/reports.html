@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Reports – DFEO{% endblock %}
+{% block breadcrumb %}<i class="bi bi-file-earmark-text me-1"></i> Reports{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Generated Reports</h4>
+  <a href="/cases" class="btn btn-sm btn-outline-primary"><i class="bi bi-folder2-open me-1"></i>Go to Cases</a>
+</div>
+<div class="alert alert-info py-2 small">
+  <i class="bi bi-info-circle me-1"></i>
+  Reports are DERIVED DOCUMENTS. They are generated summaries and are NOT original forensic evidence.
+  To generate a report, go to a Case or Evidence detail page.
+</div>
+{% if reports %}
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-dark"><tr><th>Report ID</th><th>Title</th><th>Type</th><th>Generated At</th><th>By</th><th></th></tr></thead>
+        <tbody>
+          {% for r in reports %}
+          <tr>
+            <td class="fw-mono text-primary small">{{ r.report_id }}</td>
+            <td>{{ r.title | truncate(50) }}</td>
+            <td><span class="badge bg-secondary">{{ r.report_type }}</span></td>
+            <td class="small text-muted">{{ r.generated_at.strftime('%Y-%m-%d %H:%M UTC') }}</td>
+            <td class="small">{{ r.generated_by_user.username if r.generated_by_user else '—' }}</td>
+            <td>
+              <a href="/reports/{{ r.id }}" class="btn btn-xs btn-sm btn-outline-info">View</a>
+              <a href="/reports/{{ r.id }}/download" class="btn btn-xs btn-sm btn-outline-secondary ms-1">
+                <i class="bi bi-download"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+  <i class="bi bi-file-earmark-x fs-1"></i>
+  <p class="mt-2">No reports generated yet.<br>Go to a <a href="/cases">case detail page</a> and click "Generate Report".</p>
+</div>
+{% endif %}
+{% endblock %}
